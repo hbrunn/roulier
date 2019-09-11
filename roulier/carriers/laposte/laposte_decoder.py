@@ -2,6 +2,7 @@
 """Laposte XML -> Python."""
 from lxml import objectify
 from roulier.codec import Decoder
+import base64
 
 
 class LaposteDecoder(Decoder):
@@ -36,34 +37,29 @@ class LaposteDecoder(Decoder):
             if cn23_cid:
                 annexes.append({
                     "name": 'cn23',
-                    "data": parts.get(cn23_cid),
+                    "data": base64.b64encode(parts.get(cn23_cid).encode()),
                     "type": "pdf"
                 })
 
             if rep.find('pdfUrl'):
                 annexes.append({
                     "name": "label",
-                    "data": rep.find('pdfUrl'),
+                    "data": base64.b64encode(rep.find('pdfUrl').encode()),
                     "type": "url"
                 })
-
             return {
-                "tracking": {
-                    "number": rep.parcelNumber,
-                    "partner": rep.find('parcelNumberPartner'),
-                },
-                "label": {  # main label
-                    "name": "label",
-                    "data": parts.get(label_cid),
-                    "type": output_format
-                },
                 "parcels": [{
                     "id": 1,
                     "number": rep.parcelNumber,
                     "reference": "",
+                    "tracking": {
+                        "number": rep.parcelNumber,
+                        "partner": rep.find('parcelNumberPartner'),
+                        "url": "",
+                    },
                     "label": {  # same as main label
                         "name": "label_1",
-                        "data": parts.get(label_cid),
+                        "data": base64.b64encode(parts.get(label_cid).encode()),
                         "type": output_format,
                     }
 

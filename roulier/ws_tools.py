@@ -8,6 +8,8 @@ from io import BytesIO
 import email.parser
 import re
 import base64
+from past.builtins import basestring
+from builtins import str as text
 
 
 def remove_empty_tags(xml, ouput_as_string=True):
@@ -30,7 +32,7 @@ def remove_empty_tags(xml, ouput_as_string=True):
         xml = etree.fromstring(xml)
     # else we asume xml is an lxml.etree
     if ouput_as_string:
-        return unicode(transform(xml))
+        return text(transform(xml))
     else:
         return transform(xml)
 
@@ -47,7 +49,8 @@ def get_parts(response):
     for k, v in response.raw.getheaders().iteritems():
         head_lines += str(k) + ':' + str(v) + '\n'
 
-    full = head_lines + response.content
+    content = response.content.decode()
+    full = head_lines + content
 
     parser = email.parser.Parser()
     decoded_reply = parser.parsestr(full)

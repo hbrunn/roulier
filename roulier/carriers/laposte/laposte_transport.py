@@ -1,12 +1,12 @@
 # -*- coding: utf-8 -*-
 """Implement laposteWS."""
 import requests
-import email.parser
 from lxml import objectify, etree
 from jinja2 import Environment, PackageLoader
 from roulier.transport import Transport
 from roulier.ws_tools import remove_empty_tags, get_parts
 from roulier.exception import CarrierError
+from builtins import str as text
 import logging
 
 log = logging.getLogger(__name__)
@@ -77,7 +77,7 @@ class LaposteTransport(Transport):
             errors = [
                 {
                     'id': message.id,
-                    'message': unicode(message.messageContent),
+                    'message': text(message.messageContent),
                 }
                 for message in messages if message.type == "ERROR"
             ]
