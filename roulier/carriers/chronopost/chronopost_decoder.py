@@ -2,6 +2,7 @@
 """Dpd XML -> Python."""
 from lxml import objectify
 from roulier.codec import Decoder
+from .chronopost_api import CHRONOPOST_LABEL_FORMAT
 
 
 class ChronopostDecoder(Decoder):
@@ -26,7 +27,8 @@ class ChronopostDecoder(Decoder):
                     "label": {
                         "data": data,
                         "name": "label_%s" % tracking_ref,
-                        "type": output_format,
+                        "type": CHRONOPOST_LABEL_FORMAT.get(output_format,
+                                                            output_format),
                     },
                 }],
                 "annexes": [],

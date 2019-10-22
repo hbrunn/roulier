@@ -2,17 +2,16 @@
 """Implementation of Chronopost Api."""
 from roulier.api import Api
 
-CHRONOPOST_LABEL_FORMAT = [
-    "PDF",
-    "PPR",
-    "SPD",
-    "THE",
-    "SER",
-    "Z2D",
-    "XML",
-    "THEPSG",
-    "Z2DPSG",
-]
+CHRONOPOST_LABEL_FORMAT = {
+    "PDF": 'PDF',
+    "PPR": 'PDF',
+    "SPD": 'PDF',
+    "THE": 'PDF',
+    "Z2D": 'ZPL',
+    "XML": 'XML',
+    "THEPSG": 'PDF',
+    "Z2DPSG": 'ZPL',
+}
 
 
 class ChronopostApi(Api):
@@ -47,7 +46,7 @@ class ChronopostApi(Api):
                 "required": True,
                 "empty": False,
                 "type": "string",
-                "allowed": CHRONOPOST_LABEL_FORMAT,
+                "allowed": list(CHRONOPOST_LABEL_FORMAT),
             }
         )
         schema["shippingHour"] = {
