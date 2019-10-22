@@ -2,19 +2,20 @@
 """Implementation of Laposte Api."""
 from roulier.api import Api
 
-LAPOSTE_LABEL_FORMAT = (
-    'ZPL_10x15_203dpi',
-    'ZPL_10x15_300dpi',
-    'DPL_10x15_203dpi',
-    'DPL_10x15_300dpi',
-    'PDF_10x15_300dpi',
-    'PDF_A4_300dpi',
-)
+LAPOSTE_LABEL_FORMAT = {
+    'ZPL_10x15_203dpi': 'ZPL',
+    'ZPL_10x15_300dpi': 'ZPL',
+    'DPL_10x15_203dpi': 'DPL',
+    'DPL_10x15_300dpi': 'DPL',
+    'PDF_10x15_300dpi': 'PDF',
+    'PDF_A4_300dpi': 'PDF',
+}
 
 
 class LaposteApi(Api):
     def _service(self):
         schema = super(LaposteApi, self)._service()
+        # compat py 2-3
         schema['labelFormat']['allowed'] = (
             list(LAPOSTE_LABEL_FORMAT) + ["PDF", "ZPL", "DPL"])
         schema['labelFormat']['default'] = 'ZPL_10x15_203dpi'

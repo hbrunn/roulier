@@ -2,6 +2,7 @@
 """Laposte XML -> Python."""
 from lxml import objectify
 from roulier.codec import Decoder
+from .laposte_api import LAPOSTE_LABEL_FORMAT
 import base64
 
 
@@ -60,7 +61,8 @@ class LaposteDecoder(Decoder):
                     "label": {  # same as main label
                         "name": "label_1",
                         "data": base64.b64encode(parts.get(label_cid).encode()),
-                        "type": output_format,
+                        "type": LAPOSTE_LABEL_FORMAT.get(output_format,
+                                                         output_format),
                     }
 
                 }],

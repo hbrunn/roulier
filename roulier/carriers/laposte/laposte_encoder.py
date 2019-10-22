@@ -64,6 +64,6 @@ class LaposteEncoder(Encoder):
             'DPL': 'DPL_10x15_300dpi',
             'PDF': 'PDF_10x15_300dpi',
         }
-        if label_format in LAPOSTE_LABEL_FORMAT:
+        if label_format in list(LAPOSTE_LABEL_FORMAT):
             return label_format
         return lookup.get(label_format, 'PDF_10x15_300dpi')
