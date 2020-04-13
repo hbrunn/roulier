@@ -1,14 +1,22 @@
 # -*- coding: utf-8 -*-
 """Laposte XML -> Python."""
 from lxml import objectify
-from roulier.codec import Decoder
 
+from ...roulier import Decoder
+from .laposte import CARRIER_TYPE
+import base64
 
 class LaposteDecoder(Decoder):
+    _carrier_type = CARRIER_TYPE
+    _action = ['get_label']
+
     """Laposte XML -> Python."""
 
-    def decode(self, body, parts, output_format):
+    def decode(self, response, input_payload):
         """Laposte XML -> Python."""
+        body = response['body']
+        parts = response['parts']
+        output_format = input_payload['output_format']
         def get_product_inter(msg):
             """Understand a getProductInterResponse."""
             x = {
@@ -48,27 +56,21 @@ class LaposteDecoder(Decoder):
                 })
 
             return {
-                "tracking": {
-                    "number": rep.parcelNumber,
-                    "partner": rep.find('parcelNumberPartner'),
-                },
-                "label": {  # main label
-                    "name": "label",
-                    "data": parts.get(label_cid),
-                    "type": output_format
-                },
                 "parcels": [{
-                    "id": 1,
-                    "number": rep.parcelNumber,
-                    "reference": "",
-                    "label": {  # same as main label
+                    "id": 1,  # no multi parcel management for now.
+                    "reference": rep.parcelNumber,
+                    "tracking": {
+                        'number' : rep.parcelNumber,
+                        "url": "",
+                        "partner": rep.find('parcelNumberPartner'),
+                    },
+                    "label": {
+                        "data": base64.b64encode(parts.get(label_cid).encode()),
                         "name": "label_1",
-                        "data": parts.get(label_cid),
                         "type": output_format,
-                    }
-
+                    },
                 }],
-                "annexes": annexes
+                "annexes": [],
             }
 
         xml = objectify.fromstring(body)

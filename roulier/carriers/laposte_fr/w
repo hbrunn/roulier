@@ -2,32 +2,30 @@
 """Transform input to laposte compatible xml."""
 import logging
 from jinja2 import Environment, PackageLoader
-from roulier.codec import Encoder
 from roulier.exception import InvalidApiInput
-from .laposte_api import LaposteApi, LAPOSTE_LABEL_FORMAT
 LAPOSTE_ACTIONS = ('generateLabelRequest', 'getProductInter')
 _logger = logging.getLogger(__name__)
+from roulier.codec import Encoder
+from .common import CARRIER_TYPE
+from .api_input import LAPOSTE_LABEL_FORMAT
 
 
 class LaposteEncoder(Encoder):
     """Transform input to laposte compatible xml."""
+    _carrier_type = CARRIER_TYPE
+    _action = ['get_label']
 
-    def encode(self, api_input, action):
-        """Transform input to laposte compatible xml."""
-        if not (action in LAPOSTE_ACTIONS):
-            raise InvalidApiInput(
-                'action %s not in %s' % (action, ', '.join(LAPOSTE_ACTIONS)))
+    def _get_actions_mapping():
+        return {
+            'get_label': 'generateLabelRequest',
+        }
 
-        api = LaposteApi()
-        if not api.validate(api_input):
-            _logger.warning('Laposte api call exception:')
-            raise InvalidApiInput(
-                {'api_call_exception': api.errors(api_input)})
-        data = api.normalize(api_input)
-
+    def _extra_input_data_processing(self, input_payload, data):
         data['service']['labelFormat'] = self.lookup_label_format(
             data['service']['labelFormat'])
+        return data
 
+    def transform_input_to_carrier_webservice(self, data, action):
         env = Environment(
             loader=PackageLoader('roulier', '/carriers/laposte/templates'),
             extensions=['jinja2.ext.with_', 'jinja2.ext.autoescape'],
@@ -45,11 +43,6 @@ class LaposteEncoder(Encoder):
             "headers": data['auth'],
             "output_format": data['service']['labelFormat']
         }
-
-    def api(self):
-        """Return API we are expecting."""
-        api = LaposteApi()
-        return api.api_values()
 
     def lookup_label_format(self, label_format="ZPL"):
         """Get a Laposte compatible format of label.
