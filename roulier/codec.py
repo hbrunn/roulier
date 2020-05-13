@@ -10,6 +10,7 @@ _logger = logging.getLogger(__name__)
 class Encoder(object):
     _carrier_type = ''
     _action = []
+    _manage_multiple_parcels = False # TODO move me in common and put true by default
 
     @classmethod
     def _get_actions_mapping(cls):
@@ -38,14 +39,21 @@ class Encoder(object):
             raise InvalidApiInput(
                 {'api_call_exception': validator.errors(input_payload)})
         data = validator.normalize(input_payload)
-
         data = self._extra_input_data_processing(input_payload, data)
-
-        return self.transform_input_to_carrier_webservice(data, technical_action)
+        payloads = []
+        parcels = data.get('parcels', []).copy()
+        if len(parcels) > 1 and not self.manage_multiple_parcels:
+            for parcel in parcels:
+                data['parcels'] = [parcel]
+                payloads.append(self.transform_input_to_carrier_webservice(
+                    data, technical_action))
+        else:
+            payloads.append(self.transform_input_to_carrier_webservice(
+                data, technical_action))
+        return payloads
 
 
 class Decoder(object):
     _carrier_type = ''
     _action = []
     pass
-

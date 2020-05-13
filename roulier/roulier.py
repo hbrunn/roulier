@@ -33,16 +33,17 @@ class Carrier(object):
     _carrier_type = None
     _action = []
 
-
     @classmethod
     def get_label(cls, carrier_type, action, data):
         encoder = get_subclass(Encoder, carrier_type, action)()
         decoder = get_subclass(Decoder, carrier_type, action)()
         transport = get_subclass(Transport, carrier_type, action)()
 
-        payload = encoder.encode(data, action)
-        response = transport.send(payload)
-        return decoder.decode(response, payload)
+        payloads = encoder.encode(data, action) # list may contain more than 1 element if carrier does not support multi packages
+        responses = []
+        for payload in payloads:
+            responses.append(transport.send(payload))
+        return decoder.decode(responses, payloads)
 
     def get_tracking_link(carrier_type, action, data):
         # nothing generic todo?

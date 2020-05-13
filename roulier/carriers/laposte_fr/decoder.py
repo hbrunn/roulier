@@ -13,27 +13,29 @@ class LaposteFrDecoder(Decoder):
 
     """Laposte XML -> Python."""
 
-    def decode(self, response, input_payload):
+    def decode(self, responses, input_payloads):
         """Laposte XML -> Python."""
-        body = response["body"]
-        parts = response["parts"]
-        output_format = input_payload["output_format"]
 
-        def get_product_inter(msg):
-            """Understand a getProductInterResponse."""
-            x = {"product": msg.product, "partnerType": msg.partnerType}
-            return x
+        def get_cid(tag, tree):
+            element = tree.find(tag)
+            if element is None:
+                return None
+            href = element.getchildren()[0].attrib["href"]
+            # href contains cid:236212...-38932@cfx.apache.org
+            return href[len("cid:") :]  # remove prefix
 
-        def generate_label_response(msg):
-            """Understand a generateLabelResponse."""
 
-            def get_cid(tag, tree):
-                element = tree.find(tag)
-                if element is None:
-                    return None
-                href = element.getchildren()[0].attrib["href"]
-                # href contains cid:236212...-38932@cfx.apache.org
-                return href[len("cid:") :]  # remove prefix
+        result = {
+            "parcels": [],
+            "annexes": [],
+        }
+        for response, input_payload in zip(responses, input_payloads):
+            body = response["body"]
+            parts = response["parts"]
+            output_format = input_payload["output_format"]
+
+            xml = objectify.fromstring(body)
+            msg = xml.xpath("//return")[0]
 
             rep = msg.labelResponse
             cn23_cid = get_cid("cn23", rep)
@@ -50,11 +52,8 @@ class LaposteFrDecoder(Decoder):
                 annexes.append(
                     {"name": "label", "data": rep.find("pdfUrl"), "type": "url"}
                 )
-
-            return {
-                "parcels": [
-                    {
-                        "id": 1,  # no multi parcel management for now.
+            label = {
+                        "id": 1,
                         "reference": rep.parcelNumber,
                         "tracking": {
                             "number": rep.parcelNumber,
@@ -67,14 +66,5 @@ class LaposteFrDecoder(Decoder):
                             "type": output_format,
                         },
                     }
-                ],
-                "annexes": [],
-            }
-
-        xml = objectify.fromstring(body)
-        tag = xml.tag
-        lookup = {
-            "{http://sls.ws.coliposte.fr}getProductInterResponse": get_product_inter,
-            "{http://sls.ws.coliposte.fr}generateLabelResponse": generate_label_response,
-        }
-        return lookup[tag](xml.xpath("//return")[0])
+            result['parcels'].append(label)
+        return result
